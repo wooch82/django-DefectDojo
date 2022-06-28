@@ -63,12 +63,13 @@ class SonarQubeParser(object):
                 vuln_title = vuln_properties[4].text
                 vuln_mitigation = vuln_properties[5].text
                 vuln_key = vuln_properties[6].text
+                vuln_link = list(vuln_properties[7].iter("a"))[0].attrib['href']
                 if vuln_title is None or vuln_mitigation is None:
                     raise Exception("Parser ValueError: can't find a title or a mitigation for vulnerability of name " + vuln_rule_name)
                 try:
                     vuln_details = rulesDic[vuln_rule_name]
                     vuln_description = self.get_description(vuln_details)
-                    vuln_references = self.get_references(vuln_rule_name, vuln_details)
+                    vuln_references = self.get_references(vuln_rule_name, vuln_details, vuln_link)
                     vuln_cwe = self.get_cwe(vuln_references)
                 except KeyError:
                     vuln_description = "No description provided"
@@ -161,8 +162,8 @@ class SonarQubeParser(object):
         rule_description = strip_tags(rule_description).strip()
         return rule_description
 
-    def get_references(self, rule_name, vuln_details):
-        rule_references = rule_name
+    def get_references(self, rule_name, vuln_details, vuln_link):
+        rule_references = rule_name + "\n" + vuln_link
         for a in vuln_details.iter("a"):
             rule_references += "\n" + str(a.text)
         return rule_references
